@@ -9,7 +9,12 @@ function formatTime(seconds) {
 }
 
 function playmusic(track, pause = false) {
-    currentsong.src = `/${currentFolder}/${track}`;
+    let basePath = location.hostname === "localhost"
+        ? `/${currentFolder}/`
+        : `/project/${currentFolder}/`;
+
+    currentsong.src = `${basePath}${track}`;
+    
     if (!pause) {
         currentsong.play();
         isPaused = false;
@@ -18,6 +23,7 @@ function playmusic(track, pause = false) {
         isPaused = true;
         document.getElementById("start_play").src = "play-stroke-rounded.svg";
     }
+
     document.querySelector(".songinfo").innerHTML = track;
     document.querySelector(".songtime").innerHTML = "00/00";
 }
@@ -53,18 +59,19 @@ async function get(folder) {
     currentsong.currentTime = 0;
 
     try {
-        // ✅ Correct fetch URL (NO TRAILING SLASH)
-        let res = await fetch(`${folder}/songs.json`);
+        let fetchURL = location.hostname === "localhost"
+            ? `${folder}/songs.json`
+            : `/project/${folder}/songs.json`;
 
-        // ✅ Check if fetch is successful
+        let res = await fetch(fetchURL);
+
         if (!res.ok) {
             throw new Error(`HTTP error! Status: ${res.status}`);
         }
 
-        songs = await res.json(); // ✅ Proper JSON
+        songs = await res.json();
         console.log("Fetched songs:", songs);
         showsongs(songs);
-
         playmusic(songs[0], true); // Start paused
     } catch (error) {
         console.error("Error loading songs:", error);
